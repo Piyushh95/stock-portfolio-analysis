@@ -24,3 +24,6 @@ Thumbs.db
 .mypy_cache/
 dist/
 build/
+
+# Local archives
+files.zip
