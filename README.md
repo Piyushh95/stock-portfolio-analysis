@@ -10,7 +10,7 @@ Built on **Nifty 50** (India) with optional **US Tech** stock coverage.
 
 
 <img width="1920" height="1080" alt="stock porfolio anlysis2" src="https://github.com/user-attachments/assets/8d92325a-b5e3-44c3-8527-0482665b21e9" />
-<img width="1920" height="1080" alt="Stock portfolio anlysis" src="https://github.com/user-attachments/assets/e2478809-cd91-4375-b37c-2b28fac602a6" />
+
 
 > Live dashboard running at `localhost:8501`
 
