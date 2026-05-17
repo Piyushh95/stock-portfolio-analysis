@@ -1,39 +1,43 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
 
 # Create analysis folder
-os.makedirs('analysis', exist_ok=True)
+os.makedirs('../analysis', exist_ok=True)
 
 # Load data
-data = pd.read_csv('data/stock_prices.csv', index_col=0, parse_dates=True)
+data = pd.read_csv('../data/stock_prices.csv', index_col=0, parse_dates=True)
 daily_returns = data.pct_change().dropna()
 correlation_matrix = daily_returns.corr()
-weights_df = pd.read_csv('data/optimal_weights.csv')
+weights_df = pd.read_csv('../data/optimal_weights.csv')
 
 print("Preparing Power BI data files...\n")
 
 # ===== 1. TIME SERIES DATA =====
 price_timeseries = data.reset_index()
-price_timeseries.to_csv('analysis/price_timeseries.csv', index=False)
+price_timeseries.to_csv('../analysis/price_timeseries.csv', index=False)
 print("price_timeseries.csv")
 
 # ===== 2. RETURNS TIME SERIES =====
 returns_timeseries = daily_returns.reset_index()
-returns_timeseries.to_csv('analysis/returns_timeseries.csv', index=False)
+returns_timeseries.to_csv('../analysis/returns_timeseries.csv', index=False)
 print("returns_timeseries.csv")
 
 # ===== 3. CORRELATION MATRIX (melted for Power BI) =====
 corr_melted = correlation_matrix.reset_index().melt(id_vars='index')
 corr_melted.columns = ['Stock1', 'Stock2', 'Correlation']
-corr_melted.to_csv('analysis/correlation_data.csv', index=False)
+corr_melted.to_csv('../analysis/correlation_data.csv', index=False)
 print("correlation_data.csv")
 
 # ===== 4. STOCK SUMMARY =====
-stock_summary = pd.read_csv('analysis/stock_summary.csv')
-stock_summary.to_csv('analysis/stock_summary.csv', index=False)
+stock_summary = pd.read_csv('../analysis/stock_summary.csv')
+stock_summary.to_csv('../analysis/stock_summary.csv', index=False)
 print("stock_summary.csv")
 
 # ===== 5. PORTFOLIO PERFORMANCE =====
@@ -46,11 +50,11 @@ portfolio_perf = pd.DataFrame({
     'Portfolio_Cumulative_Return': portfolio_cumulative.values,
     'Portfolio_Daily_Return': (portfolio_daily_returns * 100).values
 })
-portfolio_perf.to_csv('analysis/portfolio_performance.csv', index=False)
+portfolio_perf.to_csv('../analysis/portfolio_performance.csv', index=False)
 print("portfolio_performance.csv")
 
 # ===== 6. PORTFOLIO WEIGHTS =====
-weights_df.to_csv('analysis/portfolio_weights.csv', index=False)
+weights_df.to_csv('../analysis/portfolio_weights.csv', index=False)
 print("portfolio_weights.csv")
 
 print("\n" + "="*80)
@@ -73,7 +77,7 @@ axes[0, 0].legend(loc='best', fontsize=8, ncol=2)
 axes[0, 0].grid(True, alpha=0.3)
 
 # Panel 2: Correlation Heatmap
-sns.heatmap(correlation_matrix, annot=False, cmap='coolwarm', 
+sns.heatmap(correlation_matrix, annot=False, cmap='coolwarm',
             cbar_kws={'label': 'Correlation'}, ax=axes[0, 1], vmin=-1, vmax=1)
 axes[0, 1].set_title('Stock Correlation Matrix', fontsize=14, fontweight='bold')
 
@@ -86,7 +90,7 @@ colors = ['red' if ret < 0 else 'green' for ret in annual_returns]
 ax.scatter(annual_volatility, annual_returns, s=300, alpha=0.6, c=colors, edgecolors='black', linewidth=2)
 
 for stock in daily_returns.columns:
-    ax.annotate(stock, 
+    ax.annotate(stock,
                 (annual_volatility[stock], annual_returns[stock]),
                 fontsize=9, fontweight='bold',
                 ha='right', va='bottom',
@@ -104,7 +108,7 @@ weights_sorted = weights_sorted[weights_sorted['Weight (%)'] > 0.1]
 
 colors_pie = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 ax = axes[1, 1]
-wedges, texts, autotexts = ax.pie(weights_sorted['Weight (%)'], 
+wedges, texts, autotexts = ax.pie(weights_sorted['Weight (%)'],
                                     labels=weights_sorted['Stock'],
                                     autopct='%1.1f%%',
                                     colors=colors_pie[:len(weights_sorted)],
@@ -113,7 +117,7 @@ wedges, texts, autotexts = ax.pie(weights_sorted['Weight (%)'],
 ax.set_title('Optimal Portfolio Allocation', fontsize=14, fontweight='bold')
 
 plt.tight_layout()
-plt.savefig('analysis/portfolio_dashboard.png', dpi=300, bbox_inches='tight')
+plt.savefig('../analysis/portfolio_dashboard.png', dpi=300, bbox_inches='tight')
 print("portfolio_dashboard.png")
 plt.close()
 
@@ -129,7 +133,7 @@ ax.set_ylabel('Index (Base = 100)', fontsize=11)
 ax.legend(loc='best', fontsize=9, ncol=3)
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig('analysis/stock_performance_lines.png', dpi=300, bbox_inches='tight')
+plt.savefig('../analysis/stock_performance_lines.png', dpi=300, bbox_inches='tight')
 print("stock_performance_lines.png")
 plt.close()
 
@@ -147,7 +151,7 @@ for i, v in enumerate(weights_sorted_all['Weight (%)']):
     ax.text(v + 0.5, i, f'{v:.2f}%', va='center', fontweight='bold', fontsize=9)
 
 plt.tight_layout()
-plt.savefig('analysis/allocation_breakdown.png', dpi=300, bbox_inches='tight')
+plt.savefig('../analysis/allocation_breakdown.png', dpi=300, bbox_inches='tight')
 print("allocation_breakdown.png")
 plt.close()
 

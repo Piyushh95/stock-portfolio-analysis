@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import duckdb
 import pandas as pd
 
@@ -6,9 +11,9 @@ import pandas as pd
 conn = duckdb.connect(":memory:")
 
 # Load CSV files as SQL tables
-returns_df = pd.read_csv("analysis/returns_timeseries.csv")
-summary_df = pd.read_csv("analysis/stock_summary.csv")
-weights_df = pd.read_csv("data/optimal_weights.csv")
+returns_df = pd.read_csv("../analysis/returns_timeseries.csv")
+summary_df = pd.read_csv("../analysis/stock_summary.csv")
+weights_df = pd.read_csv("../data/optimal_weights.csv")
 
 conn.register("returns_data", returns_df)
 conn.register("stock_summary", summary_df)

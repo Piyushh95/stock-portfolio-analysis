@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,7 +17,7 @@ print("MACHINE LEARNING: Predicting Stock Returns")
 print("=" * 80)
 
 # Load data
-returns_df = pd.read_csv("analysis/returns_timeseries.csv", index_col="Date", parse_dates=True)
+returns_df = pd.read_csv("../analysis/returns_timeseries.csv", index_col="Date", parse_dates=True)
 
 # ===== FEATURE ENGINEERING =====
 print("\nFEATURE ENGINEERING")
@@ -163,7 +168,7 @@ ax.set_xticklabels([m.replace(" (", "\n(") for m in model_names], fontsize=9)
 ax.grid(alpha=0.3, axis="y")
 
 plt.tight_layout()
-plt.savefig("analysis/ml_analysis.png", dpi=300, bbox_inches="tight")
+plt.savefig("../analysis/ml_analysis.png", dpi=300, bbox_inches="tight")
 print("Saved: analysis/ml_analysis.png")
 
 print("\n" + "=" * 80)

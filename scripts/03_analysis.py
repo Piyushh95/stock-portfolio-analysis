@@ -1,9 +1,14 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import pandas as pd
 import numpy as np
 from risk_free_rate import get_india_10y_risk_free_rate
 
 # Load data
-data = pd.read_csv('data/stock_prices.csv', index_col=0, parse_dates=True)
+data = pd.read_csv('../data/stock_prices.csv', index_col=0, parse_dates=True)
 
 # === RETURNS ===
 daily_returns = data.pct_change().dropna()
@@ -46,7 +51,7 @@ print(f"\nBest Risk-Adjusted (Sharpe): {summary.iloc[0]['Stock']} ({summary.iloc
 print(f"Worst Risk-Adjusted (Sharpe): {summary.iloc[-1]['Stock']} ({summary.iloc[-1]['Sharpe Ratio']:.2f})")
 
 # Save for later
-summary.to_csv('analysis/stock_summary.csv', index=False)
-correlation_matrix.to_csv('analysis/correlation_matrix.csv')
+summary.to_csv('../analysis/stock_summary.csv', index=False)
+correlation_matrix.to_csv('../analysis/correlation_matrix.csv')
 
 print("\nSaved stock_summary.csv and correlation_matrix.csv")

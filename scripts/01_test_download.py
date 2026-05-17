@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
@@ -26,4 +31,4 @@ print(f"\nFirst few rows:")
 print(data.head())
 
 # Save for later
-data.to_csv('data/stock_prices.csv')
+data.to_csv('../data/stock_prices.csv')

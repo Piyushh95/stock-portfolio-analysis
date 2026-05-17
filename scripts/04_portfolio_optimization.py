@@ -1,10 +1,15 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 from risk_free_rate import get_india_10y_risk_free_rate
 
 # Load data
-data = pd.read_csv('data/stock_prices.csv', index_col=0, parse_dates=True)
+data = pd.read_csv('../data/stock_prices.csv', index_col=0, parse_dates=True)
 daily_returns = data.pct_change().dropna()
 cov_matrix = daily_returns.cov()
 
@@ -27,7 +32,7 @@ risk_free_rate, rf_source = get_india_10y_risk_free_rate()
 
 # Optimize for max Sharpe ratio
 print("\nOptimizing portfolio (this takes a few seconds)...")
-result = minimize(negative_sharpe, initial_guess, 
+result = minimize(negative_sharpe, initial_guess,
                  args=(daily_returns, cov_matrix, risk_free_rate),
                  method='SLSQP', bounds=bounds, constraints=constraints)
 
@@ -67,7 +72,7 @@ print("\n" + "-"*80)
 print(f"Total allocation: {weights_df['Weight (%)'].sum():.2f}%")
 
 # Save
-weights_df.to_csv('data/optimal_weights.csv', index=False)
+weights_df.to_csv('../data/optimal_weights.csv', index=False)
 print("\nSaved optimal_weights.csv")
 
 # Portfolio improvement

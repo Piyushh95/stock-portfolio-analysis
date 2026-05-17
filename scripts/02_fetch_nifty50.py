@@ -1,7 +1,11 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
-import os
 from data_sources.constituents import get_nifty_constituents
 
 # Fetch NIFTY universe dynamically
@@ -29,7 +33,7 @@ print(f"\nData shape: {data.shape}")
 print(f"Stocks ({len(data.columns)}): {list(data.columns)}")
 
 # Save universe metadata for traceability
-os.makedirs("analysis", exist_ok=True)
+os.makedirs("../analysis", exist_ok=True)
 metadata = pd.DataFrame(
     {
         "symbol": all_stocks,
@@ -39,8 +43,8 @@ metadata = pd.DataFrame(
         "end_date": end_date.strftime("%Y-%m-%d"),
     }
 )
-metadata.to_csv("analysis/universe_metadata.csv", index=False)
+metadata.to_csv("../analysis/universe_metadata.csv", index=False)
 
 # Save
-data.to_csv('data/stock_prices.csv')
+data.to_csv('../data/stock_prices.csv')
 print("\nSaved to data/stock_prices.csv")

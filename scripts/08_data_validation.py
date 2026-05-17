@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 from datetime import datetime
 
 import numpy as np
@@ -9,8 +14,8 @@ print("DATA VALIDATION: Comprehensive Quality Checks")
 print("=" * 80)
 
 # Load data
-stock_data = pd.read_csv("data/stock_prices.csv", index_col=0, parse_dates=True)
-returns_data = pd.read_csv("analysis/returns_timeseries.csv", index_col="Date", parse_dates=True)
+stock_data = pd.read_csv("../data/stock_prices.csv", index_col=0, parse_dates=True)
+returns_data = pd.read_csv("../analysis/returns_timeseries.csv", index_col="Date", parse_dates=True)
 
 # ===== MISSING VALUES =====
 print("\nCHECK 1: Missing Values")

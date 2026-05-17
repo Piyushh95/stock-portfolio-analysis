@@ -1,8 +1,11 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import yfinance as yf
 
 
 ANALYSIS_DIR = Path("analysis")
@@ -12,6 +15,13 @@ def read_csv_if_exists(path: Path):
     if path.exists():
         return pd.read_csv(path)
     return None
+
+
+def normalize_weights(raw_weights: list[float]) -> list[float]:
+    total = float(np.sum(raw_weights))
+    if total <= 0:
+        return [0.0 for _ in raw_weights]
+    return [w / total for w in raw_weights]
 
 
 st.set_page_config(page_title="Portfolio Research Dashboard", layout="wide")
@@ -32,9 +42,114 @@ with st.sidebar:
         "visualizes the latest generated outputs in `analysis/`."
     )
 
-tabs = st.tabs(["Overview", "Efficient Frontier", "Backtest", "Factor Attribution"])
+tabs = st.tabs(
+    [
+        "Stock Search",
+        "Portfolio Input",
+        "Overview",
+        "Efficient Frontier",
+        "Backtest",
+        "Factor Attribution",
+    ]
+)
 
 with tabs[0]:
+    st.subheader("Stock Search")
+    c1, c2, c3 = st.columns([2, 1, 1])
+    with c1:
+        ticker = st.text_input("Ticker Symbol", value="AAPL").strip().upper()
+    with c2:
+        stock_start = st.date_input("Start", value=pd.Timestamp("2023-01-01"), key="stock_start")
+    with c3:
+        stock_end = st.date_input("End", value=pd.Timestamp.today(), key="stock_end")
+
+    if ticker:
+        stock_df = yf.download(ticker, start=stock_start, end=stock_end, progress=False)
+        if stock_df.empty:
+            st.warning("No data returned for this ticker/date range.")
+        else:
+            st.subheader("Recent Data")
+            st.dataframe(stock_df.tail(10), use_container_width=True)
+
+            close_col = "Close"
+            if isinstance(stock_df.columns, pd.MultiIndex):
+                close_col = ("Close", ticker)
+            close_series = stock_df[close_col]
+
+            ma20 = close_series.rolling(20).mean()
+            ma50 = close_series.rolling(50).mean()
+
+            fig, ax = plt.subplots(figsize=(10, 4))
+            ax.plot(close_series.index, close_series, label="Close", linewidth=1.6)
+            ax.plot(ma20.index, ma20, label="MA 20", linewidth=1.2)
+            ax.plot(ma50.index, ma50, label="MA 50", linewidth=1.2)
+            ax.set_title(f"{ticker} Price and Moving Averages")
+            ax.set_xlabel("Date")
+            ax.set_ylabel("Price")
+            ax.legend()
+            ax.grid(alpha=0.3)
+            st.pyplot(fig)
+
+            latest_close = float(close_series.iloc[-1])
+            change_pct = float((close_series.iloc[-1] / close_series.iloc[0] - 1) * 100)
+            m1, m2 = st.columns(2)
+            m1.metric("Latest Close", f"{latest_close:.2f}")
+            m2.metric("Period Return", f"{change_pct:.2f}%")
+
+            csv_bytes = stock_df.to_csv().encode("utf-8")
+            st.download_button(
+                "Download Stock Data CSV",
+                data=csv_bytes,
+                file_name=f"{ticker.lower()}_prices.csv",
+                mime="text/csv",
+            )
+
+with tabs[1]:
+    st.subheader("Portfolio Input")
+    st.caption("Enter tickers and target weights. Weights are normalized to 100%.")
+
+    symbols_raw = st.text_input("Portfolio Symbols (comma-separated)", "AAPL,MSFT,GOOGL")
+    symbols = [s.strip().upper() for s in symbols_raw.split(",") if s.strip()]
+
+    if not symbols:
+        st.info("Add at least one symbol to build a portfolio.")
+    else:
+        raw_weights = []
+        for sym in symbols:
+            raw_weights.append(st.slider(f"{sym} weight", min_value=0.0, max_value=100.0, value=10.0, step=0.5))
+
+        norm_weights = normalize_weights(raw_weights)
+        portfolio_df = pd.DataFrame(
+            {
+                "Stock": symbols,
+                "Input Weight": raw_weights,
+                "Normalized Weight (%)": [w * 100 for w in norm_weights],
+            }
+        )
+        st.dataframe(portfolio_df, use_container_width=True)
+
+        pie = px.pie(portfolio_df, values="Normalized Weight (%)", names="Stock", title="Portfolio Allocation")
+        st.plotly_chart(pie, use_container_width=True)
+
+        returns_ts = read_csv_if_exists(ANALYSIS_DIR / "returns_timeseries.csv")
+        if returns_ts is not None:
+            aligned = [s for s in symbols if s in returns_ts.columns]
+            if aligned:
+                tmp = returns_ts[aligned].copy()
+                aligned_weights = np.array(
+                    [norm_weights[symbols.index(s)] for s in aligned],
+                    dtype=float,
+                )
+                weighted_returns = (tmp * aligned_weights).sum(axis=1)
+                est_annual_return = float(weighted_returns.mean() * 252 * 100)
+                est_annual_vol = float(weighted_returns.std() * np.sqrt(252) * 100)
+                c1, c2 = st.columns(2)
+                c1.metric("Estimated Annual Return", f"{est_annual_return:.2f}%")
+                c2.metric("Estimated Annual Volatility", f"{est_annual_vol:.2f}%")
+            else:
+                st.info("No matching symbols found in `analysis/returns_timeseries.csv` for risk metrics.")
+
+with tabs[2]:
     st.subheader("Overview")
     summary = read_csv_if_exists(ANALYSIS_DIR / "stock_summary.csv")
     weights = read_csv_if_exists(ANALYSIS_DIR / "portfolio_weights.csv")
@@ -70,7 +185,7 @@ with tabs[0]:
         st.caption("Universe Metadata")
         st.dataframe(universe_meta.head(20), use_container_width=True)
 
-with tabs[1]:
+with tabs[3]:
     st.subheader("Efficient Frontier")
     frontier = read_csv_if_exists(ANALYSIS_DIR / "efficient_frontier.csv")
     if frontier is None:
@@ -87,7 +202,7 @@ with tabs[1]:
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(frontier.sort_values("sharpe", ascending=False).head(20), use_container_width=True)
 
-with tabs[2]:
+with tabs[4]:
     st.subheader("Backtest")
     ts = read_csv_if_exists(ANALYSIS_DIR / "backtest_timeseries.csv")
     summary = read_csv_if_exists(ANALYSIS_DIR / "backtest_summary.csv")
@@ -106,7 +221,7 @@ with tabs[2]:
         st.caption("Rebalance Log")
         st.dataframe(rebalance.tail(50), use_container_width=True)
 
-with tabs[3]:
+with tabs[5]:
     st.subheader("Factor Attribution")
     exposures = read_csv_if_exists(ANALYSIS_DIR / "factor_exposures.csv")
     contrib = read_csv_if_exists(ANALYSIS_DIR / "factor_contributions.csv")

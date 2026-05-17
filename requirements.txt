@@ -7,3 +7,4 @@ seaborn
 plotly
 yfinance
 duckdb
+streamlit
